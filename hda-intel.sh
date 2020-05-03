@@ -3,6 +3,9 @@
 AUDIO_INTEL="lsmod | grep snd_hda_intel | head -n 1 | awk '{print  $1}' | tr '[:upper:]' '[:lower:]'"
 REP_CONFIG="/etc/modprobe.d/"
 FICHIER_CONFIG="snd-hda-intel.conf"
+if [[ $(whoami) != "root" ]]; then
+	ACTIVE_ROOT="sudo"
+fi
 
 # FONCTIONS #
 function TestW(){
@@ -41,11 +44,7 @@ function TestFichier(){
 		done
 	else
 		if [[ ! -e "${REP_CONFIG}/${FICHIER_CONFIG}"  ]]; then
-			if [[ $(whoami) != "root" ]]; then
-				sudo touch "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-			else
-				touch "${REP_CONFIG}/${FICHIER_CONFIG}"		2>&1
-			fi
+			$(ACTIVE_ROOT) touch "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
 			local CodeRetour=${?}
 			TestW ${CodeRetour}
 		fi
@@ -59,40 +58,19 @@ function EcritureConfig(){
 	#
 	echo " Configuration pour audio Intel en cours..."
 	# Écriture dans le fichier
-	echo "# Permet d'avoir le son !" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "options snd-hda-intel model=auto" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "" >> "${REP_CONFIG}/${FICHIER_CONFIG}"				2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "# Alias pour les cartes" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "alias char-major-116 snd" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "alias snd-card-0 snd-hda-intel" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "alias snd-card-1 snd-hda-intel" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "" >> "${REP_CONFIG}/${FICHIER_CONFIG}"				2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "# Changement d'index du périphérique" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "options snd-hda-intel id=Generic_1 index=0" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "options snd-hda-intel id=Generic index=1" >> "${REP_CONFIG}/${FICHIER_CONFIG}"	2>&1
-	local CodeRetour=${?}
-	TestW ${CodeRetour}
-	echo "" >> "${REP_CONFIG}/${FICHIER_CONFIG}"				2>&1
+	$(ACTIVE_ROOT) echo "# Permet d'avoir le son !
+	options snd-hda-intel model=auto
+
+	# Alias pour les cartes
+	alias char-major-116 snd
+	alias snd-card-0 snd-hda-intel
+	alias snd-card-1 snd-hda-intel
+
+	# Changement d'index du périphérique
+	options snd-hda-intel id=Generic_1 index=0
+	options snd-hda-intel id=Generic index=1
+
+	" >> "${REP_CONFIG}/${FICHIER_CONFIG}"				2>&1
 	local CodeRetour=${?}
 	TestW ${CodeRetour}
 }
